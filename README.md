@@ -6,7 +6,7 @@ This project is a secure **Password Manager** based on **Arduino Micro**. The de
 
 1. **microSD Adapter**  
 2. **5-Button Keypad**  
-3. **LCD Display**  
+3. **OLED Display**  
 
 ---
 
