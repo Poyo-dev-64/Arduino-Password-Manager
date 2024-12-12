@@ -1,16 +1,17 @@
 #include <SD.h>
 #include <Wire.h>
 #include <DoublyLinkedList.h>
-#include <hd44780.h>
-#include <hd44780ioClass/hd44780_I2Cexp.h>
 #include <Keypad.h>
 #include <Keyboard.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
-#define HD44780_LCDOBJECT
 #define PIN_SPI_CS 10
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
 
+Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 DoublyLinkedList<String> files(true);
-hd44780_I2Cexp lcd(0x27, 16, 2);
 uint16_t currentFile = 0;
 const int COLUMN_NUM = 5;
 const int ROW_NUM = 1;
@@ -23,29 +24,38 @@ Keypad keypad = Keypad(makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_N
 
 void updateDisplay()
 {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(files[currentFile]);
+    oled.clearDisplay();
+    oled.setCursor(0, 0);
+    oled.setTextSize(1);
+    oled.setTextColor(SSD1306_WHITE);
+    oled.println(files[currentFile]);
+    oled.display();
 }
 
 void checkSD()
 {
     if (!SD.begin(PIN_SPI_CS))
     {
-        lcd.clear();
-        lcd.print("SD not found");
-        lcd.setCursor(0, 1);
-        lcd.print("Insert & reboot");
+        oled.clearDisplay();
+        oled.setCursor(0, 0);
+        oled.println("SD not found");
+        oled.println("Insert & reboot");
+        oled.display();
         while (1);
     }
 }
 
 void setup()
 {
-
     Serial.begin(115200);
-    lcd.begin(16, 2);
-    lcd.backlight();
+    if (!oled.begin(SSD1306_I2C_ADDRESS, 0x3C))
+    {
+        Serial.println("OLED init failed");
+        while (1);
+    }
+    oled.clearDisplay();
+    oled.display();
+
     Keyboard.begin();
     checkSD();
     File root = SD.open("/");
@@ -60,7 +70,7 @@ void setup()
     }
 
     root.close();
-    lcd.print(files[currentFile]);
+    updateDisplay();
 }
 
 void loop()
